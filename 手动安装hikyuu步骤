@@ -1,0 +1,109 @@
+Linux Mint X86_64,18.3,playonlinux安装中投证券超强合一版。
+安装所需文件全部下载到主目录下，然后在主目录下操作。注意将涉及主目录的环境变量等改成自己的
+#下载相关资源
+log4c="log4cplus-1.2.1-rc2.tar.gz"
+[ ! -f $log4c ] && wget -c -O $log4c https://sourceforge.net/projects/log4cplus/files/log4cplus-stable/1.2.1/log4cplus-1.2.1-rc2.tar.gz/download  &
+#[ ! -f hdf5-1.8.19.tar.gz ] && wget -c -O hdf5-1.8.19.tar.gz https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.19.tar.gz &
+[ ! -f ta-lib-0.4.0-src.tar.gz ] && wget -c -O ta-lib-0.4.0-src.tar.gz http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz &
+[ ! -f boost_1_64_0.tar.gz ] && wget -c -O boost_1_64_0.tar.gz http://sourceforge.net/projects/boost/files/boost/1.64.0/boost_1_64_0.tar.gz/download &
+#[ ! -d hikyuu ] && git clone https://git.oschina.net/fasiondog/hikyuu.git &
+[ ! -d hikyuu ] && git clone https://github.com/fasiondog/hikyuu.git &
+[ -d hikyuu ] && echo "git pull hikyuu .........." && cd hikyuu && git pull && cd ..
+[ ! -f conda3.sh ] && wget -c -O conda3.sh https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-4.4.0-Linux-x86_64.sh && chmod a+x conda3.sh
+
+cd ~/
+sudo apt-get install libhdf5-cpp-11 libhdf5-serial-dev libmysql++-dev
+tar zxvf ta-lib-0.4.0-src.tar.gz 
+cd ta-lib/
+./configure --prefix=/usr
+make
+sudo make install
+
+./conda3.sh -p ~/conda
+运行完成后关闭再开终端
+conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/'
+conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/'
+conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r/'
+conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/pro/'
+conda config --set show_channel_urls yes
+
+conda install -y libgcc 
+conda install -y pandas numpy flask beautifulsoup4 requests ipython
+conda install -y matplotlib lxml hdf5 jupyter
+conda install -y mkl
+#conda install -y mysql-python
+#conda create --name hiyuu python=3.6
+#pip install mysql-connector-python -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install ta-lib -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install pyperclip -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install pyecharts -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+export CPLUS_INCLUDE_PATH=~/conda/include/python3.6m/
+export PYTHONPATH=~/conda/
+
+tar zxvf boost_1_64_0.tar.gz
+cd boost_1_64_0/
+./bootstrap.sh --exec-prefix=/usr/local
+./b2 -q -j 4 threading=multi
+./b2 install threading=multi
+
+export INCLUDE="/home/zhangshoug/boost_1_64_0:$INCLUDE"
+export LIBRARY_PATH="/home/zhangshoug/boost_1_64_0/stage/lib:$LIBRARY_PATH"
+
+
+tar zxvf log4cplus-1.2.1-rc2.tar.gz
+cd log4cplus-1.2.1-rc2/
+./configure --prefix=/usr/local CXXFLAGS=-std=c++0x
+make -j 4
+sudo make install
+
+export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+export LD_RUN_PATH="/usr/local/lib:$LD_RUN_PATH"
+
+export PYTHONPATH=$HOME/hikyuu/tools:$HOME/conda/
+export BOOST_ROOT=$HOME/boost_1_64_0
+export BOOST_LIB=/usr/local/lib
+export HIKYUU=$HOME/hikyuu
+export LD_LIBRARY_PATH=./:/usr/local/lib:/usr/lib:$HOME/hikyuu/tools/hikyuu/
+export CPLUS_INCLUDE_PATH=$HOME/conda/include/python3.6m/:$HOME/hikyuu/extern-libs/sqlite3/:/usr/include/:/usr/include/hdf5/serial/:/usr/local/include/log4cplus/
+
+cd ~/
+vi +11 30_patchfile.hikyuu
+
+#git clone https://github.com/fasiondog/hikyuu.git
+#出现#ImportError: /home/zhangshoug/hikyuu/tools/hikyuu/libhikyuu.so: undefined symbol: mysql_num_rows
+
+下载https://github.com/fasiondog/hikyuu/tree/38e7ca797f13c15c66fe67172e75fe45f971bfc8
+的ZIP回来，解包。
+cd hikyuu
+cp Jamroot.linux Jamroot.linux.orig
+patch -p0 < ../30_patchfile.hikyuu
+./build.sh
+如运行遇到错误，根据提示安装缺失的包，修改相应的文件
+
+cd /home/zhangshoug/hikyuu/tools/hikyuu
+python hku_config.py
+通达信安装路径：/home/zhangshoug/PlayOnLinux\'s\ virtual\ drives/ztzqallinone/drive_c/new_ztzq_allinone/
+./importdata
+
+
+
+zhangshoug@zhangshoug-VirtualBox ~/hikyuu/tools/hikyuu $ python
+Python 3.6.1 |Anaconda custom (64-bit)| (default, May 11 2017, 13:09:58) 
+[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from hikyuu.interactive.interactive import *
+warning: can't import talib, maybe loss some Indicator from talib!
+/home/zhangshoug/conda/lib/python3.6/site-packages/matplotlib/font_manager.py:280: UserWarning: Matplotlib is building the font cache using fc-list. This may take a moment.
+  'Matplotlib is building the font cache using fc-list. '
+16:40:28 TRACE - SQLITE3: /home/zhangshoug/stock/stock.db
+16:40:28 TRACE - Loading market information...
+16:40:28 TRACE - Loading stock type information...
+16:40:28 TRACE - Loading stock information...
+16:40:28 TRACE - Loading KData...
+16:40:28 TRACE - Preload all day kdata to buffer! [StockManager::setKDataDriver]
+16:40:28 TRACE - 0.00185117 seconds Loaded Data.
+>>> 
+16:40:38 TRACE - Closed Sqlite3 database!
+16:40:38 TRACE - Quit Hikyuu system!
+
