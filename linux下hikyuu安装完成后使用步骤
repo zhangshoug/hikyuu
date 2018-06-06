@@ -1,0 +1,48 @@
+linux下hikyuu安装完成后使用步骤
+一、快速配置数据源与存放路径
+进入hikyuu的安装路径/home/zhangshoug/hikyuu/tools/hikyuu/，运行 python hku_config.py 根据提示配置数据的存放路径及通达信安装目录
+ $ cd /home/zhangshoug/hikyuu/tools/hikyuu/
+ $ python hku_config.py
+二、导入数据
+note:初次运行Hikyuu前，必须执行一次 importdata 命令，以便生成必要的数据文件。
+进入hikyuu的安装路径，运行 importdata 命令（建议将hikyuu的安装路径加入环境变量PATH中）：
+ $ importdata
+每日收盘后，需在通过证券软件下载数据后，运行此命令导入数据。如需实时日线数据，目前有一个简易的解决方法，可参见新手入门示例。
+从 Python Shell 中运行
+$ python
+Python 3.6.4 |Anaconda, Inc.| (default, Jan 16 2018, 18:10:19) 
+[GCC 7.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import matplotlib.pyplot as plt
+>>> from hikyuu.interactive.interactive import *
+22:39:55 TRACE - SQLITE3: /home/zhangshoug/stock/stock.db
+22:39:55 TRACE - Loading market information...
+22:39:55 TRACE - Loading stock type information...
+22:39:55 TRACE - Loading stock information...
+22:39:55 TRACE - Loading KData...
+22:39:55 TRACE - Preload all day kdata to buffer! [StockManager::setKDataDriver]
+22:39:57 TRACE - 1.73305 seconds Loaded Data.
+>>> s = sm['sh000001']
+>>> k = s.getKData(Query(-100))
+>>> k.plot()
+>>> plt.show()
+>>> plt.show()
+>>> k.plot()
+>>> plt.show()
+>>> s = sm['sz002049']
+>>> k = s.getKData(Query(-100))
+>>> k.plot()
+>>> plt.show()
+>>> 
+matplotlib显示图形时中文字体乱码的问题
+https://blog.csdn.net/huuinn/article/details/78968966
+matplotlib无法自动绘制图像的问题
+matplotlib 默认每次绘图后，都要调用 plt.show() 显示图形，这在交互式探索时，非常不方便，同样可以修改其配置文件，使其不必显示调用 plt.show() 即可显示图形。
+ $ vi /home/zhangshoug/anaconda3/lib/python3.6/site-packages/matplotlib/mpl-data/matplotlibrc
+修改 “interactive” 选项，改为 True：
+
+#interactive  : False
+interactive  : True
+
+
+
