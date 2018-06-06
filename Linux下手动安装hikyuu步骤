@@ -55,6 +55,7 @@ find ./ -type f -name '*.cpp'|xargs grep 'MySQL'
 修改cpp,删除mysql相关语句。
 
 cp Jamroot.linux Jamroot.linux.orig
+patch -p0 < ../30_patchfile.hikyuu
 ./build.sh
 如遇错误：
 cd tools/hikyuu/
