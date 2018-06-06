@@ -80,6 +80,8 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> exit()
 21:13:22 TRACE - Closed Sqlite3 database!
 21:13:22 TRACE - Quit Hikyuu system!
+安装完成后将如下语句加入.bashrc
+export PATH="/home/zhangshoug/hikyuu/tools/hikyuu:$PATH"
 
 
 
