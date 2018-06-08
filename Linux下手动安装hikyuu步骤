@@ -19,6 +19,14 @@ conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/
 conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/'
 conda config --set show_channel_urls yes
 
+conda install -y libgcc 
+conda install -y pandas numpy flask beautifulsoup4 requests ipython
+conda install -y matplotlib lxml hdf5 jupyter
+conda install -y mkl
+#conda install -y mysql-python
+#conda create --name hiyuu python=3.6
+#pip install mysql-connector-python -i https://pypi.tuna.tsinghua.edu.cn/simple
+
 pip install ta-lib -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install pyperclip -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install pyecharts -i https://pypi.tuna.tsinghua.edu.cn/simple
