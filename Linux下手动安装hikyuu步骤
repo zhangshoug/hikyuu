@@ -18,7 +18,7 @@ chmod +x Anaconda3-5.2.0-Linux-x86_64.sh
 conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/'
 conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/'
 conda config --set show_channel_urls yes
-
+以下步骤Anaconda3-4.*版本必做。
 conda install -y libgcc 
 conda install -y pandas numpy flask beautifulsoup4 requests ipython
 conda install -y matplotlib lxml hdf5 jupyter
