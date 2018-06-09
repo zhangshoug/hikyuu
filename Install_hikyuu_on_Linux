@@ -1,0 +1,115 @@
+linux mint 18.3 64bit，默认中文安装系统上通过。boost换成最新的1_67_0无法成功
+sudo apt-get install vim git bzip2 build-essential autotools-dev automake autoconf
+
+sudo apt-get install hdf5-helpers libhdf5-cpp-11 libhdf5-dev libhdf5-10 libhdf5-serial-dev
+sudo apt-get install libmysqlclient-dev libmysqlclient20 libmysql++-dev  libsqlite3-dev libbz2-dev 
+下面语句可选.
+sudo apt-get install libboost-all-dev liblog4cplus-dev gccxml python3-dev liblzma-dev
+
+tar zxvf ta-lib-0.4.0-src.tar.gz 
+cd ta-lib/
+./configure --prefix=/usr
+make
+sudo make install
+
+chmod +x Anaconda3-5.2.0-Linux-x86_64.sh
+./Anaconda3-5.2.0-Linux-x86_64.sh
+安装完成后关闭终端，再打开。
+conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/'
+conda config --add channels 'https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/'
+conda config --set show_channel_urls yes
+
+#conda install -y libgcc 
+#conda install -y pandas numpy flask beautifulsoup4 requests ipython
+#conda install -y matplotlib lxml hdf5 jupyter
+#conda install -y mkl
+#conda install -y mysql-python
+#conda create --name hiyuu python=3.6
+#pip install mysql-connector-python -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+pip install ta-lib -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install pyperclip -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install pyecharts -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+export CPLUS_INCLUDE_PATH=/home/zhangshoug/anaconda3/include/python3.6m/
+
+tar zxvf boost_1_64_0.tar.gz
+cd boost_1_64_0/
+./bootstrap.sh --exec-prefix=/usr/local
+./b2 -q -j 4 threading=multi
+根据提示
+export BOOST_ROOT=/home/zhangshoug/boost_1_64_0
+export BOOST_LIB=/home/zhangshoug/boost_1_64_0//stage/lib
+sudo ./b2 install threading=multi
+
+tar zxvf log4cplus-1.2.1.tar.gz 
+cd log4cplus-1.2.1/
+./configure --prefix=/usr/local CXXFLAGS=-std=c++0x
+make -j 4
+sudo make install
+
+export LD_RUN_PATH="/usr/local/lib:$LD_RUN_PATH"
+export PYTHONPATH=/home/zhangshoug/hikyuu/tools:/home/zhangshoug/anaconda3/
+export HIKYUU=/home/zhangshoug/hikyuu
+export LD_LIBRARY_PATH=./:/usr/local/lib:/usr/lib:/home/zhangshoug/hikyuu/tools/hikyuu/
+export CPLUS_INCLUDE_PATH=/home/zhangshoug/anaconda3/include/python3.6m/::/home/zhangshoug/hikyuu/extern-libs/sqlite3/:/home/zhangshoug/hikyuu/extern-libs/mysql/:/usr/include/:/usr/include/hdf5/serial/:/usr/local/include/log4cplus/
+
+
+git clone https://github.com/fasiondog/hikyuu.git
+cd hikyuu/
+如出现mysql相关错误。
+zhangshoug@zhangshouguo-VirtualBox ~ $ python
+Python 3.6.5 |Anaconda, Inc.| (default, Apr 29 2018, 16:14:56) 
+[GCC 7.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from hikyuu.interactive.interactive import *
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/home/zhangshoug/hikyuu/tools/hikyuu/__init__.py", line 56, in <module>
+    from .core import *
+  File "/home/zhangshoug/hikyuu/tools/hikyuu/core.py", line 34, in <module>
+    from .core_doc import *
+  File "/home/zhangshoug/hikyuu/tools/hikyuu/core_doc.py", line 28, in <module>
+    from hikyuu._hikyuu import *
+ImportError: /home/zhangshoug/hikyuu/tools/hikyuu/libhikyuu.so: undefined symbol: mysql_num_rows
+则如下操作:
+find ./ -name mysql|xargs rm -rf
+find ./ -type f -name '*.cpp'|xargs grep 'mysql'
+find ./ -type f -name '*.cpp'|xargs grep 'MySQL'
+修改cpp,删除mysql相关语句。
+
+
+cp Jamroot.linux Jamroot.linux.orig
+vi +13 Jamroot.linux
+改成如下:你的python版本和python安装目录
+using python : 3.6 : : /home/zhangshoug/anaconda3 ;
+
+./build.sh
+如遇错误：
+cd tools/hikyuu/
+python hku_config.py 
+./importdata 
+再返回运行
+./build.sh
+
+ $ python
+Python 3.6.4 |Anaconda, Inc.| (default, Jan 16 2018, 18:10:19) 
+[GCC 7.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from hikyuu.interactive.interactive import *
+21:13:17 TRACE - SQLITE3: /home/zhangshoug/stock/stock.db
+21:13:17 TRACE - Loading market information...
+21:13:17 TRACE - Loading stock type information...
+21:13:17 TRACE - Loading stock information...
+21:13:17 TRACE - Loading KData...
+21:13:17 TRACE - Preload all day kdata to buffer! [StockManager::setKDataDriver]
+21:13:18 TRACE - 1.6755 seconds Loaded Data.
+>>> exit()
+21:13:22 TRACE - Closed Sqlite3 database!
+21:13:22 TRACE - Quit Hikyuu system!
+安装完成后将如下语句加入.bashrc
+export PATH="/home/zhangshoug/hikyuu/tools/hikyuu:$PATH"
+
+
+
+
