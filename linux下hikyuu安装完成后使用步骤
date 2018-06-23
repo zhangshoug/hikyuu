@@ -3,6 +3,8 @@ linux下hikyuu安装完成后使用步骤
 进入hikyuu的安装路径/home/zhangshoug/hikyuu/tools/hikyuu/，运行 python hku_config.py 根据提示配置数据的存放路径及通达信安装目录
  $ cd /home/zhangshoug/hikyuu/tools/hikyuu/
  $ python hku_config.py
+ $ mkdir -p /home/zhangshoug/stock/weight/shase/weight
+ $ mkdir -p /home/zhangshoug/stock/weight/sznse/weight
 二、导入数据
 note:初次运行Hikyuu前，必须执行一次 importdata 命令，以便生成必要的数据文件。
 进入hikyuu的安装路径，运行 importdata 命令（建议将hikyuu的安装路径加入环境变量PATH中）：
