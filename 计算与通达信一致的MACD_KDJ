@@ -1,0 +1,74 @@
+from hikyuu.interactive.interactive import *
+import numpy as np
+import talib as tl
+import tushare as ts
+import functools
+
+# 同花顺和通达信等软件中的SMA
+def SMA_CN(close, timeperiod) :
+    close = np.nan_to_num(close)
+    return functools.reduce(lambda x, y: ((timeperiod - 1) * x + y) / timeperiod, close)
+    
+# 同花顺和通达信等软件中的KDJ
+def KDJ_CN(high, low, close, fastk_period, slowk_period, fastd_period) :
+    kValue, dValue = tl.STOCHF(high, low, close, fastk_period, fastd_period=1, fastd_matype=0)
+    
+    kValue = np.array(list(map(lambda x : SMA_CN(kValue[:x], slowk_period), range(1, len(kValue) + 1))))
+    dValue = np.array(list(map(lambda x : SMA_CN(kValue[:x], fastd_period), range(1, len(kValue) + 1))))
+    
+    jValue = 3 * kValue - 2 * dValue
+    
+    func = lambda arr : np.array([0 if x < 0 else (100 if x > 100 else x) for x in arr])
+    
+    kValue = func(kValue)
+    dValue = func(dValue)
+    jValue = func(jValue)
+    return kValue, dValue, jValue
+
+# 同花顺和通达信等软件中的RSI
+def RSI_CN(close, timeperiod) :
+    diff = map(lambda x, y : x - y, close[1:], close[:-1])
+    diffGt0 = map(lambda x : 0 if x < 0 else x, diff)
+    diffABS = map(lambda x : abs(x), diff)
+    diff = np.array(diff)
+    diffGt0 = np.array(diffGt0)
+    diffABS = np.array(diffABS)
+    diff = np.append(diff[0], diff)
+    diffGt0 = np.append(diffGt0[0], diffGt0)
+    diffABS = np.append(diffABS[0], diffABS)
+    rsi = map(lambda x : SMA_CN(diffGt0[:x], timeperiod) / SMA_CN(diffABS[:x], timeperiod) * 100
+            , range(1, len(diffGt0) + 1) )
+    
+    return np.array(rsi)
+    
+
+# 同花顺和通达信等软件中的MACD
+def MACD_CN(close, fastperiod, slowperiod, signalperiod) :
+    macdDIFF, macdDEA, macd = tl.MACDEXT(close, fastperiod=fastperiod, fastmatype=1, slowperiod=slowperiod, slowmatype=1, signalperiod=signalperiod, signalmatype=1)
+    macd = macd * 2
+    return macdDIFF, macdDEA, macd 
+    
+   s = sm['sh600030']
+k = s.getKData(QueryByDate(s.startDatetime, Datetime.now(),recoverType=Query.FORWARD))
+df = k.to_df()
+close = [float(x) for x in df['close']]
+highPrice = list([float(x) for x in df['high']])
+lowPrice = [float(x) for x in df['low']]
+#指数移动平均线的值
+df['EMA12'] = talib.EMA(np.array(close), timeperiod=6)  
+df['EMA26'] = talib.EMA(np.array(close), timeperiod=12)   
+ #计算MACD指标
+df['macdDIFF'],df['macdDEA'],df['macd'] = MACD_CN(np.array(close),
+                            fastperiod=5, slowperiod=13, signalperiod=9)
+#计算KDJ指标
+df['kValue'],df['dValue'],df['jValue']=KDJ_CN(np.array(highPrice),np.array(lowPrice),np.array(close),
+  fastk_period=9,slowk_period=3,fastd_period=3)
+
+#df.tail(5)
+macdDIFF=df['macdDIFF']
+macdDEA=df['macdDEA']
+macd=df['macd']
+KDJ_k=df['kValue']
+KDJ_d=df['dValue']
+KDJ_j=df['jValue']
+print(macdDIFF[-1])
