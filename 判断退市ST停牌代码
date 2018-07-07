@@ -1,0 +1,22 @@
+from hikyuu.interactive.interactive import *
+###上证交易日期，用于判断停牌
+sh = sm['sh000001']
+#print(sh)
+sh_k = sh.getKData(QueryByDate(s.startDatetime, Datetime.now(),recoverType=Query.FORWARD))
+sh_day = sh_k[-1].datetime
+print("上证指数交易日期",sh_day)
+
+i = 0
+#遍历所有股票
+for s in blocka:
+    i += 1
+    ###过滤ST和退市
+    if not ('*' in s.name or 'ST' in s.name or '退' in s.name) :
+        ktest = s.getKData(QueryByDate(s.startDatetime, Datetime.now(),recoverType=Query.FORWARD))
+        ###求取有多少跟K线，也就是有多少个交易日
+        daytest= len(ktest)  
+        ###选取至少交易200天且今日不停牌的票
+        if daytest >200 and(ktest[-1].datetime.year == sh_day.year and \
+                              ktest[-1].datetime.month == sh_day.month and \
+                              ktest[-1].datetime.day == sh_day.day) :
+            print(s)
