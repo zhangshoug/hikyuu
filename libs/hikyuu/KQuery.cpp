@@ -60,7 +60,7 @@ string KQuery::getKTypeName(KType dataType) {
     case YEAR:
         return "YEAR";
 
-    //BTCÀ©Õ¹
+    //BTCï¿½ï¿½Õ¹
     case MIN3:
         return "MIN3";
     case HOUR2:
@@ -71,6 +71,14 @@ string KQuery::getKTypeName(KType dataType) {
         return "HOUR6";
     case HOUR12:
         return "HOUR12";
+    case DAY5:
+        return "DAY5";
+    case DAY10:
+        return "DAY10";
+    case DAY15:
+        return "DAY15";
+    case DAY20:
+        return "DAY20";
 
     default:
         return "INVALID_DATA_TYPE";
@@ -104,7 +112,7 @@ KQuery::KType KQuery::getKTypeEnum(const string& arg) {
     } else if ("YEAR" == name) {
         result = YEAR;
 
-    //BTCÀ©Õ¹
+    //BTCï¿½ï¿½Õ¹
     } else if ("MIN3" == name) {
         result = MIN3;
     } else if ("HOUR2" == name) {
@@ -115,6 +123,14 @@ KQuery::KType KQuery::getKTypeEnum(const string& arg) {
         result = HOUR6;
     } else if ("HOUR12" == name) {
         result = HOUR12;
+    } else if ("DAY5" == name) {
+        result = DAY5;
+    } else if ("DAY10" == name) {
+        result = DAY10;
+    } else if ("DAY15" == name) {
+        result = DAY15;
+    } else if ("DAY20" == name) {
+        result = DAY20;
     } else {
         result = INVALID_KTYPE;
     }
