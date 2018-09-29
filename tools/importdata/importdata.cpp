@@ -25,13 +25,8 @@
 #include <iconv.h>
 #endif
 
-#if defined(BOOST_MSVC)
 #include <hdf5.h>
 #include <hdf5_hl.h>
-#else
-#include <hdf5/serial/hdf5.h>
-#include <hdf5/serial/hdf5_hl.h>
-#endif
 
 #include "sqlite3callback.h"
 #include "importdata.h"
@@ -638,8 +633,7 @@ void import_stock_weight(const SqlitePtr& db,
         return;
     }
 
-    int total = stock_list.size();
-    int count = 0, cur = 0;
+    int count = 0;
     std::list<StockCode>::const_iterator stk_iter = stock_list.begin();
     for (; stk_iter != stock_list.end(); ++stk_iter) {
         //progress_bar(++cur, total);
@@ -961,7 +955,7 @@ H5::Group h5_get_group(const H5FilePtr& h5file, const std::string& name) {
  */
 //-----------------------------------------------------------------------------
 bool h5_is_exist_data_table(const H5::Group& group, const std::string& name) {
-    hid_t dataset_id = H5Dopen(group.getId(), name.c_str());
+    hid_t dataset_id = H5Dopen2(group.getId(), name.c_str(), H5P_DEFAULT);
     return dataset_id < 0 ? false : true;
 }
 
@@ -976,7 +970,7 @@ bool h5_is_exist_data_table(const H5::Group& group, const std::string& name) {
 //-----------------------------------------------------------------------------
 H5::DataSet h5_get_data_table(const H5::Group& group, const std::string& name) {
     hid_t loc_id = group.getId();
-    hid_t dataset_id = H5Dopen(loc_id, name.c_str());
+    hid_t dataset_id = H5Dopen2(loc_id, name.c_str(), H5P_DEFAULT);
 
     //指定的数据集不存在
     if (dataset_id < 0) {
@@ -986,7 +980,7 @@ H5::DataSet h5_get_data_table(const H5::Group& group, const std::string& name) {
         if (err < 0) {
             std::cout << "[h5_get_table] Error!" << std::endl;
         } else {
-            dataset_id = H5Dopen(loc_id, name.c_str());
+            dataset_id = H5Dopen2(loc_id, name.c_str(), H5P_DEFAULT);
         }
     }
 
@@ -1004,7 +998,7 @@ H5::DataSet h5_get_data_table(const H5::Group& group, const std::string& name) {
 //-----------------------------------------------------------------------------
 H5::DataSet h5_get_index_table(const H5::Group& group, const std::string& name) {
     hid_t loc_id = group.getId();
-    hid_t dataset_id = H5Dopen(loc_id, name.c_str());
+    hid_t dataset_id = H5Dopen2(loc_id, name.c_str(), H5P_DEFAULT);
 
     //指定的数据集不存在
     if (dataset_id < 0) {
@@ -1014,7 +1008,7 @@ H5::DataSet h5_get_index_table(const H5::Group& group, const std::string& name) 
         if (err < 0) {
             std::cout << "[h5_get_index_table] Error!" << std::endl;
         } else {
-            dataset_id = H5Dopen(loc_id, name.c_str());
+            dataset_id = H5Dopen2(loc_id, name.c_str(), H5P_DEFAULT);
         }
     }
 
@@ -1046,9 +1040,8 @@ bool invalid_QianLongData(const QianLongData& data) {
 
 //-----------------------------------------------------------------------------
 /**
- * 获取所属周一的日期
+ * 固定获取所属周五的日期，无论周五是不是交易日
  * @param olddate YYYYMMDDhhmm 标识的日期
- * @note 认为周一是一周中的第一天，周日是一周中的最后一天
  */
 //-----------------------------------------------------------------------------
 unsigned long long get_week_date(unsigned long long olddate) {
@@ -1056,9 +1049,8 @@ unsigned long long get_week_date(unsigned long long olddate) {
     unsigned long long m = olddate/1000000LL - y*100LL;
     unsigned long long d = olddate/10000LL - (y*10000+m*100LL);
     bg::date tempdate(y, m, d);
-    long day = tempdate.day_of_week();
-    day = day ? day - 1 : 6;
-    bg::date tempweekdate = tempdate - boost::gregorian::date_duration(day);
+    long day = 5 - tempdate.day_of_week();
+    bg::date tempweekdate = tempdate + boost::gregorian::date_duration(day);
     return (unsigned long long)tempweekdate.year() * 100000000LL +
             (unsigned long long)tempweekdate.month() * 1000000LL +
             (unsigned long long)tempweekdate.day() * 10000LL;
@@ -1066,19 +1058,24 @@ unsigned long long get_week_date(unsigned long long olddate) {
 
 //-----------------------------------------------------------------------------
 /**
- * 获取所属月份的起始日期
+ * 固定获取获取所属月份的结束日期，无论该日是否是交易日
  * @param olddate YYYYMMDDhhmm 标识的日期
  */
 //-----------------------------------------------------------------------------
 unsigned long long get_month_date(unsigned long long olddate) {
     unsigned long long y = olddate/100000000LL;
     unsigned long long m = olddate/1000000LL - y*100LL;
-    return y * 100000000LL + m * 1000000LL + 10000LL;
+    unsigned long long d = olddate/10000LL - (y*10000+m*100LL);
+    bg::date tempdate(y, m, d);
+    bg::date month_date = tempdate.end_of_month();
+    return (unsigned long long)month_date.year() * 100000000LL +
+            (unsigned long long)month_date.month() * 1000000LL +
+            (unsigned long long)month_date.day() * 10000LL;
 }
 
 //-----------------------------------------------------------------------------
 /**
- * 获取所属季度的起始日期
+ * 获取所属季度的结束日期
  * @param olddate YYYYMMDDhhmm 标识的日期
  */
 //-----------------------------------------------------------------------------
@@ -1087,39 +1084,39 @@ unsigned long long get_quarter_date(unsigned long long olddate) {
     unsigned long long m = olddate/1000000LL - y*100LL;
     unsigned long long new_m;
     if (m >= 1 && m < 4) {
-        new_m = 1;
+        new_m = 3310000LL;
     } else if (m >=4 && m < 7) {
-        new_m = 2;
+        new_m = 6300000LL;
     } else if (m >= 7 && m < 10) {
-        new_m = 3;
+        new_m = 9300000LL;
     } else {
-        new_m = 4;
+        new_m = 12310000LL;
     }
-    return y * 100000000LL + new_m * 1000000LL + 10000LL;
+    return y * 100000000LL + new_m;
 }
 
 //-----------------------------------------------------------------------------
 /**
- * 获取所属半年的起始日期
+ * 获取所属半年的结束日期，无论是否为交易日
  * @param olddate YYYYMMDDhhmm 标识的日期
  */
 //-----------------------------------------------------------------------------
 unsigned long long get_halfyear_date(unsigned long long olddate) {
     unsigned long long y = olddate/100000000LL;
     unsigned long long m = olddate/1000000LL - y*100LL;
-    unsigned long long new_m = m > 6 ? 7 : 1;
-    return y * 100000000LL + new_m * 1000000LL + 10000LL;
+    unsigned long long new_m = m > 6 ? 12310000LL : 6300000LL;
+    return y * 100000000LL + new_m;
 }
 
 //-----------------------------------------------------------------------------
 /**
- * 获取所属年的起始日期
+ * 获取所属年的结束日期，无论是否为交易日
  * @param olddate YYYYMMDDhhmm 标识的日期
  */
 //-----------------------------------------------------------------------------
 unsigned long long get_year_date(unsigned long long olddate) {
     unsigned long long y = olddate/100000000LL;
-    return y * 100000000LL + 1010000LL;
+    return y * 100000000LL + 12310000LL;
 }
 
 //-----------------------------------------------------------------------------
@@ -1669,7 +1666,6 @@ int dzh_import_min5_data_from_file(const std::string& file_name, const H5FilePtr
 
     std::vector<H5Record> h5_buffer;
     QianLongData data;
-    unsigned int tempval = 0xFFFFFFFF;
     memset(&data, 0, sizeof(QianLongData));
     while (file.read((char *)&data, sizeof(QianLongData))){
 
@@ -2021,7 +2017,7 @@ bool str_to_h5_record(const std::string& str, H5Record *out) {
                       + (unsigned long long)td.hours() * 100LL
                       + (unsigned long long)td.minutes();
 
-    } catch (boost::bad_lexical_cast& e) {
+    } catch (boost::bad_lexical_cast&) {
         return false;
     }
 
@@ -2179,7 +2175,7 @@ void update_stock_date(const SqlitePtr& db, const H5FilePtr& h5file,
         return;
     }
 
-    unsigned int today = get_today_date();
+    //unsigned int today = get_today_date();
 
     H5::Group h5_group = h5_get_group(h5file, "/data");
     //不能直接使用h5_get_data_table，会创建空数据集，造成脏数据
@@ -2854,7 +2850,6 @@ int tdx_import_min_data_from_file(const SqlitePtr& db,
 
     std::vector<H5Record> h5_buffer;
     TdxMinData data;
-    unsigned int tempval = 0xFFFFFFFF;
     memset(&data, 0, sizeof(TdxMinData));
     while (file.read((char *)&data, sizeof(TdxMinData))){
 
