@@ -22,12 +22,14 @@ while i<(day-N) :
        'low':[K_N_low],'close':[K_N_close],'amount':[K_N_amount],'volume':[K_N_volume]}
     df_tmp_tmp=pd.DataFrame(data=d)
     #如何向已有的DataFrame追加数据
-    df_tmp=df.append(df_tmp_tmp)
+    df_tmp=df_tmp.append(df_tmp_tmp)
     i += 5
 #df     
-data = {"start_datetime": pd.Series(df_tmp["start_datetime"].values),"end_datetime": pd.Series(df_tmp["end_datetime"].values),
-        "open": pd.Series(df_tmp["open"].values),"high": pd.Series(df_tmp["high"].values),
-        "low": pd.Series(df_tmp["low"].values),"close": pd.Series(df_tmp["close"].values),
-        "amount": pd.Series(df["amount"].values),"volume": pd.Series(df["volume"].values)}
-df = pd.DataFrame(data).dropna(axis=0, how='any', thresh=None, subset=None, inplace=False)
+#data = {"start_datetime": pd.Series(df_tmp["start_datetime"].values),"end_datetime": pd.Series(df_tmp["end_datetime"].values),
+ #       "open": pd.Series(df_tmp["open"].values),"high": pd.Series(df_tmp["high"].values),
+  #      "low": pd.Series(df_tmp["low"].values),"close": pd.Series(df_tmp["close"].values),
+   #     "amount": pd.Series(df["amount"].values),"volume": pd.Series(df["volume"].values)}
+#df = pd.DataFrame(data).dropna(axis=0, how='any', thresh=None, subset=None, inplace=False)
+#df
+df=df_tmp.reset_index()
 df
