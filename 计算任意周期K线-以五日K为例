@@ -1,0 +1,33 @@
+s = sm['sh601069']
+ENDTIME=Datetime.now()
+k = s.getKData(QueryByDate(s.startDatetime, ENDTIME,kType=Query.DAY,recoverType=Query.FORWARD))
+#data=QA.QA_fetch_stock_day_adv(s.code,s.startDatetime.date(),'2015-02-10')
+day=len(k)
+#设置周期为N
+N=5
+i=0
+#创建一个空的DataFrame
+d={'start_datetime':[],'end_datetime':[],'open':[],'high':[],'low':[],'close':[],'amount':[],'volume':[]}
+df_tmp=pd.DataFrame(data=d)
+while i<(day-N) :
+    K_N_start_datetime=k[i].datetime.date()
+    K_N_end_datetime=k[i+4].datetime.date()
+    K_N_open = k[i].openPrice
+    K_N_high=max(k[i].highPrice,k[i+1].highPrice,k[i+2].highPrice,k[i+3].highPrice,k[i+4].highPrice)
+    K_N_low=min(k[i].lowPrice,k[i+1].lowPrice,k[i+2].lowPrice,k[i+3].lowPrice,k[i+4].lowPrice)
+    K_N_close=k[i+4].closePrice
+    K_N_amount=sum([k[i].transAmount,k[i+1].transAmount,k[i+2].transAmount,k[i+3].transAmount,k[i+4].transAmount])
+    K_N_volume=sum([k[i].transCount,k[i+1].transCount,k[i+2].transCount,k[i+3].transCount,k[i+4].transCount])
+    d={'start_datetime':[K_N_start_datetime],'end_datetime':[K_N_end_datetime],'open':[K_N_open],'high':[K_N_high],
+       'low':[K_N_low],'close':[K_N_close],'amount':[K_N_amount],'volume':[K_N_volume]}
+    df_tmp_tmp=pd.DataFrame(data=d)
+    #如何向已有的DataFrame追加数据
+    df_tmp=df.append(df_tmp_tmp)
+    i += 5
+#df     
+data = {"start_datetime": pd.Series(df_tmp["start_datetime"].values),"end_datetime": pd.Series(df_tmp["end_datetime"].values),
+        "open": pd.Series(df_tmp["open"].values),"high": pd.Series(df_tmp["high"].values),
+        "low": pd.Series(df_tmp["low"].values),"close": pd.Series(df_tmp["close"].values),
+        "amount": pd.Series(df["amount"].values),"volume": pd.Series(df["volume"].values)}
+df = pd.DataFrame(data).dropna(axis=0, how='any', thresh=None, subset=None, inplace=False)
+df
